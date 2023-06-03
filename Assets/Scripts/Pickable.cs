@@ -43,6 +43,9 @@ public class Pickable : MonoBehaviour
         }
     }
 
+    //-for the enable checkbox to appear
+    void Start(){}
+
 
     void OnTriggerEnter2D(Collider2D col)
     {
@@ -74,7 +77,8 @@ public class Pickable : MonoBehaviour
 
         }
 
-            //Destroy the collided ball
+            //Destroy self
+            GetComponent<NetworkObject>().Despawn();
             Destroy(gameObject);
         }
     }

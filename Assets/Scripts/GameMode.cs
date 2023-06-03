@@ -27,6 +27,10 @@ public class GameMode :  NetworkBehaviour
             if(!ballPrefab)
                 ballPrefab = Resources.Load<GameObject>("Ball");
 
+            //load Pickable Resource
+            if(!pickablePrefab)
+                pickablePrefab = Resources.Load<GameObject>("Pickable");
+
 
             // Ensure only one instance of the Singleton exists
             if (singleton != null && singleton != this)
@@ -47,6 +51,7 @@ public class GameMode :  NetworkBehaviour
 
     static GameObject wallPrefab;
     static GameObject ballPrefab;
+    static GameObject pickablePrefab;
 
 
 
@@ -83,6 +88,7 @@ public class GameMode :  NetworkBehaviour
 
         SpawnWalls();
         GameState.Singleton.GameStartClientRpc();
+        StartCoroutine(SpawnPickable());
     }
 
 
@@ -116,4 +122,24 @@ public class GameMode :  NetworkBehaviour
             ball.GetComponent<NetworkObject>().Spawn();
         }
     }
+
+
+
+    IEnumerator SpawnPickable()
+    {
+        while (true)
+        {
+            Vector2 position = new Vector2(Random.Range(-BackgroundSize.backgroundSize/2,BackgroundSize.backgroundSize/2),
+                Random.Range(-BackgroundSize.backgroundSize/2,BackgroundSize.backgroundSize/2));
+
+
+            GameObject pickable = Instantiate(pickablePrefab,position,Quaternion.identity);
+            pickable.GetComponent<Pickable>().enabled = true;
+            pickable.GetComponent<NetworkObject>().Spawn();
+
+            yield return new WaitForSeconds(3);
+        }
+    }
+
+
 }

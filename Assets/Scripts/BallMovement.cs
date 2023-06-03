@@ -6,16 +6,16 @@ using Unity.Netcode;
 public class BallMovement : NetworkBehaviour
 {
     [SerializeField]
-    float speed = 5;
+    int speed = 10;
     
 
     GameObject lastPlayerHit; 
 
     Rigidbody2D rb;
 
-void Awake(){
-    rb = GetComponent<Rigidbody2D>();
-}
+    void Awake(){
+        rb = GetComponent<Rigidbody2D>();
+    }
 
     public void InitBallVelocity()
     {
@@ -41,10 +41,10 @@ void Awake(){
             lastPlayerHit = col.gameObject;
 
         //idk why balls lose velocity when colliding against each other despite both being bouncy, so i set a lower limit to magnitude
-        if (rb.velocity.magnitude < speed / 2 )
+        if (rb.velocity.magnitude < speed )
         {
             // If the magnitude is below the minimum, clamp it to the minimum speed
-            rb.velocity = rb.velocity.normalized * speed/2;
+            rb.velocity = rb.velocity.normalized * speed;
         }
     }
 
@@ -52,6 +52,7 @@ void Awake(){
 
     void FixedUpdate()
     {
+        //-coudl check if it was close to hitting another wall and count towards both players
         if(transform.localPosition.x > BackgroundSize.backgroundSize / 2)
         {
             OffLimit("right");

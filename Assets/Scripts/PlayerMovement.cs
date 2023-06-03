@@ -7,7 +7,7 @@ using Unity.Collections;
 
 public class PlayerMovement : NetworkBehaviour
 {
-    public float speed = 7f; // set by editor
+    public float speed = 10f; // set by editor
     public float playerOffsetFromEdge; // set by editor
 
     public NetworkVariable<FixedString32Bytes> position = new NetworkVariable<FixedString32Bytes>(); // set by OnNetworkSpawn

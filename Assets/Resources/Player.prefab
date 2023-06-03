@@ -49,7 +49,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5579f655a5133ce489ae666a17075b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 5
+  speed: 10
   playerOffsetFromEdge: 1
   position:
     m_InternalValue:
