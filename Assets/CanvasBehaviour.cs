@@ -48,6 +48,7 @@ public class CanvasBehaviour : MonoBehaviour
     //only on server
     public void StartButton(){
         GameMode.Singleton.StartGame();
+        Destroy(startButton);
     }
 
     //only on server
