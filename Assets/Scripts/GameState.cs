@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Unity.Netcode;
 
 public class GameState : NetworkBehaviour
@@ -29,6 +30,12 @@ public class GameState : NetworkBehaviour
     }
     
     #endregion
+
+    //called by gamemode
+    [ClientRpc]
+    public void GameStartClientRpc() {
+        Debug.Log("GAME START");
+    }
 
 
 }

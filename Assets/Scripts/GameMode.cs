@@ -58,7 +58,7 @@ public class GameMode :  NetworkBehaviour
     public string getPos(){
 
         //when there are at least 2 players
-        if(nextPos == 0)
+        if(nextPos == 1)
         {
             CanvasBehaviour.Singleton.EnableButton();
         }
@@ -75,6 +75,7 @@ public class GameMode :  NetworkBehaviour
         ball.GetComponent<NetworkObject>().Spawn();
 
         SpawnWalls();
+        GameState.Singleton.GameStartClientRpc();
     }
 
 
