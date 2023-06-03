@@ -38,4 +38,9 @@ public class GameState : NetworkBehaviour
     }
 
 
+    //called by playermovement
+    public void PlayerJoined(string position,bool isMe){
+        Debug.Log(position);
+        GameObject.Find($"score{position}").GetComponent<Text>().enabled = true;
+    }
 }
