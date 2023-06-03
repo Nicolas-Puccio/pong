@@ -6,7 +6,7 @@ using Unity.Netcode;
 public class GameMode :  NetworkBehaviour 
 {
     
-    #region Singleton
+    #region Singleton and Resources.Load
 
     private static GameMode singleton;
 
@@ -17,17 +17,22 @@ public class GameMode :  NetworkBehaviour
     }
 
     private void Awake()
-    {
-        // Ensure only one instance of the Singleton exists
-        if (singleton != null && singleton != this)
         {
-            Destroy(gameObject);
-            return;
+            //load Wall Resource
+            if(!wallPrefab)
+                wallPrefab = Resources.Load<GameObject>("Wall");
+
+
+            // Ensure only one instance of the Singleton exists
+            if (singleton != null && singleton != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            singleton = this;
         }
 
-        singleton = this;
-    }
-    
     #endregion
 
 
@@ -35,12 +40,16 @@ public class GameMode :  NetworkBehaviour
     int nextPos =  0; //index de la posicion del proximo jugador
 
 
+    private static GameObject wallPrefab;
+
+
+
     public override void OnNetworkSpawn()
     {
         if (!IsHost) 
         {
-            Debug.Log("gamemode destroy self on client");
-            Destroy(gameObject)
+            Debug.Log("gamemode disable self on client");
+            enabled = false;
         }
     }
     
@@ -49,7 +58,7 @@ public class GameMode :  NetworkBehaviour
     public string getPos(){
 
         //when there are at least 2 players
-        if(nextPos == 1)
+        if(nextPos == 0)
         {
             CanvasBehaviour.Singleton.EnableButton();
         }
@@ -60,6 +69,28 @@ public class GameMode :  NetworkBehaviour
 
     //called by ui
     public void StartGame(){
-        GameObject.FindWithTag("Ball").GetComponent<BallMovement>().enabled = true;
+ 
+        GameObject ball = Instantiate(Resources.Load<GameObject>("Ball"));
+        ball.GetComponent<BallMovement>().enabled = true;
+        ball.GetComponent<NetworkObject>().Spawn();
+
+        SpawnWalls();
+    }
+
+
+
+    void SpawnWalls(){
+        if(nextPos <4)
+        {
+            GameObject wall = Instantiate(wallPrefab,new Vector2(-BackgroundSize.backgroundSize/2,0),Quaternion.identity);
+            wall.transform.localScale = new Vector2(1,BackgroundSize.backgroundSize);
+            wall.GetComponent<NetworkObject>().Spawn();
+        }
+        if(nextPos <3)
+        {
+            GameObject wall = Instantiate(wallPrefab,new Vector2(BackgroundSize.backgroundSize/2,0),Quaternion.identity);
+            wall.transform.localScale = new Vector2(1,BackgroundSize.backgroundSize);
+            wall.GetComponent<NetworkObject>().Spawn();
+        }
     }
 }
