@@ -1,31 +1,54 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Unity.Netcode;
 
 public class BallMovement : NetworkBehaviour
 {
-    public float speed;
+    [SerializeField]
+    float speed = 5;
     
-    private static GameObject ballPrefab;
 
-    void Awake(){
-        if(!ballPrefab)
-        ballPrefab = Resources.Load<GameObject>("Ball");
-    }
+    GameObject lastPlayerHit; 
 
-    void Start()
+    Rigidbody2D rb;
+
+void Awake(){
+    rb = GetComponent<Rigidbody2D>();
+}
+
+    public void InitBallVelocity()
     {
-        float randomAngle = Random.Range(0f, 360f);
+            float randomAngle = Random.Range(0f, 360f);
 
-        // Convert the angle to a direction vector
-        Vector2 direction = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
+            // Convert the angle to a direction vector
+            Vector2 direction = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad), Mathf.Sin(randomAngle * Mathf.Deg2Rad));
 
-        // Set the velocity with the constant speed and random direction
-        GetComponent<Rigidbody2D>().velocity = direction * speed;
+            // Set the velocity with the constant speed and random direction
+            rb.velocity = direction * speed;
         
     }
+
+    public void InitBallVelocity(Vector2 direction)
+    {
+        rb.velocity = direction * speed;
+    }
+
+
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.CompareTag("Player"))
+            lastPlayerHit = col.gameObject;
+
+        //idk why balls lose velocity when colliding against each other despite both being bouncy, so i set a lower limit to magnitude
+        if (rb.velocity.magnitude < speed / 2 )
+        {
+            // If the magnitude is below the minimum, clamp it to the minimum speed
+            rb.velocity = rb.velocity.normalized * speed/2;
+        }
+    }
+
+
 
     void FixedUpdate()
     {
@@ -46,23 +69,13 @@ public class BallMovement : NetworkBehaviour
             OffLimit("bot");
         }
     }
+    
+
 
     void OffLimit(string pos){
-        Debug.Log(pos);
+        GameMode.Singleton.Shock(pos);
 
-        Text scoreText = GameObject.Find($"score{pos}").GetComponent<Text>();
-
-        scoreText.text = (int.Parse(scoreText.text)+1).ToString();
-
-        GameObject[] balls = GameObject.FindGameObjectsWithTag("Ball");
-        if(balls.Length == 1)
-        {
-            GameObject ball = Instantiate(ballPrefab);
-            ball.GetComponent<BallMovement>().enabled = true;
-            ball.GetComponent<NetworkObject>().Spawn();
-        }
-
-GetComponent<NetworkObject>().Despawn();
+        GetComponent<NetworkObject>().Despawn();
         Destroy(gameObject);
     }
 }

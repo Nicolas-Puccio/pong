@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Unity.Netcode;
 
 public class GameMode :  NetworkBehaviour 
@@ -22,6 +23,10 @@ public class GameMode :  NetworkBehaviour
             if(!wallPrefab)
                 wallPrefab = Resources.Load<GameObject>("Wall");
 
+            //load Ball Resource
+            if(!ballPrefab)
+                ballPrefab = Resources.Load<GameObject>("Ball");
+
 
             // Ensure only one instance of the Singleton exists
             if (singleton != null && singleton != this)
@@ -40,7 +45,8 @@ public class GameMode :  NetworkBehaviour
     int nextPos =  0; //index de la posicion del proximo jugador
 
 
-    private static GameObject wallPrefab;
+    static GameObject wallPrefab;
+    static GameObject ballPrefab;
 
 
 
@@ -58,7 +64,7 @@ public class GameMode :  NetworkBehaviour
     public string getPos(){
 
         //when there are at least 2 players
-        if(nextPos == 1)
+        if(nextPos == 0)//-change to 1
         {
             CanvasBehaviour.Singleton.EnableButton();
         }
@@ -72,6 +78,7 @@ public class GameMode :  NetworkBehaviour
  
         GameObject ball = Instantiate(Resources.Load<GameObject>("Ball"));
         ball.GetComponent<BallMovement>().enabled = true;
+        ball.GetComponent<BallMovement>().InitBallVelocity();
         ball.GetComponent<NetworkObject>().Spawn();
 
         SpawnWalls();
@@ -92,6 +99,21 @@ public class GameMode :  NetworkBehaviour
             GameObject wall = Instantiate(wallPrefab,new Vector2(BackgroundSize.backgroundSize/2,0),Quaternion.identity);
             wall.transform.localScale = new Vector2(1,BackgroundSize.backgroundSize);
             wall.GetComponent<NetworkObject>().Spawn();
+        }
+    }
+
+    public void Shock(string pos){
+        
+        Text scoreText = GameObject.Find($"score{pos}").GetComponent<Text>();        
+        scoreText.text = (int.Parse(scoreText.text)+1).ToString();
+
+        GameObject[] balls = GameObject.FindGameObjectsWithTag("Ball");
+        if(balls.Length == 1)
+        {
+            GameObject ball = Instantiate(ballPrefab);
+            ball.GetComponent<BallMovement>().enabled = true;
+            ball.GetComponent<BallMovement>().InitBallVelocity();
+            ball.GetComponent<NetworkObject>().Spawn();
         }
     }
 }
