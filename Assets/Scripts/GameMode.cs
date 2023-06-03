@@ -5,27 +5,9 @@ using Unity.Netcode;
 
 public class GameMode :  NetworkBehaviour 
 {
-    public int clientsRequired;
-
-    string[] positions = new string[] { "top",  "bot","right", "left" };
-    int nextPos =  0; //index de la posicion del proximo jugador
-
-    public override void OnNetworkSpawn()
-    {
-        if (!IsHost) 
-        {
-            enabled = false;
-            Debug.Log("gamemode disabled self");
-        }
-    }
-
-    public string getPos(){
-        if(nextPos == clientsRequired-1)GameObject.FindWithTag("Ball").GetComponent<BallMovement>().enabled = true;
-
-        return positions[nextPos++];
-    }
     
-    
+    #region Singleton
+
     private static GameMode singleton;
 
     // Public property to access the instance
@@ -44,5 +26,40 @@ public class GameMode :  NetworkBehaviour
         }
 
         singleton = this;
+    }
+    
+    #endregion
+
+
+    string[] positions = new string[] { "top",  "bot","right", "left" };
+    int nextPos =  0; //index de la posicion del proximo jugador
+
+
+    public override void OnNetworkSpawn()
+    {
+        if (!IsHost) 
+        {
+            Debug.Log("gamemode destroy self on client");
+            Destroy(gameObject)
+        }
+    }
+    
+
+    //used by playermovement    
+    public string getPos(){
+
+        //when there are at least 2 players
+        if(nextPos == 1)
+        {
+            CanvasBehaviour.Singleton.EnableButton();
+        }
+
+        return positions[nextPos++];
+    }
+
+
+    //called by ui
+    public void StartGame(){
+        GameObject.FindWithTag("Ball").GetComponent<BallMovement>().enabled = true;
     }
 }
