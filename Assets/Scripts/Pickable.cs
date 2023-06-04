@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
-public class Pickable : MonoBehaviour
+public class Pickable : NetworkBehaviour
 {
   //-deberia usar herencia
   public MultiplyProperties multiplyProperties;
@@ -12,8 +12,7 @@ public class Pickable : MonoBehaviour
 
   static GameObject ballPrefab;
 
-
-  void Awake()
+  void Start()
   {
     if (!ballPrefab)
     {
@@ -28,7 +27,7 @@ public class Pickable : MonoBehaviour
       case 0:
         // Handle Multiply powerup
         multiplyProperties = new MultiplyProperties(UnityEngine.Random.Range(1, 5));
-        GetComponent<SpriteRenderer>().color = new Color(0.3f, 1f, 0.6f, 1f);
+        GetComponent<SpriteRenderer>().color = new Color(0.5f, .5f, 0.5f, 1f);
         break;
       case 1:
         // Handle Shock powerup
@@ -38,7 +37,7 @@ public class Pickable : MonoBehaviour
       case 2:
         // Handle Wacky powerup
         wackyBallProperties = new WackyBallProperties(100);
-        GetComponent<SpriteRenderer>().color = new Color(0f, 01f, 0f, 1f);
+        GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 1f);
         break;
       default:
         // Handle unknown powerup type
@@ -47,12 +46,13 @@ public class Pickable : MonoBehaviour
     }
   }
 
-  //-for the enable checkbox to appear
-  void Start() { }
 
 
   void OnTriggerEnter2D(Collider2D col)
   {
+    if (!IsHost)
+      return;
+
     if (!col.gameObject.CompareTag("Ball"))
       return;
 

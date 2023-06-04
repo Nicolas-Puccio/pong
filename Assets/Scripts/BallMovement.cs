@@ -22,14 +22,11 @@ public class BallMovement : NetworkBehaviour
   #endregion
 
 
-  void Awake()
-  {
-    rb = GetComponent<Rigidbody2D>();
-  }
-
 
   public void Start()
   {
+    rb = GetComponent<Rigidbody2D>();
+
     Vector2 direction = RotationHelper.DegreesToVector2(Random.Range(0f, 360f));
 
     // Set the velocity with the constant speed and random direction
