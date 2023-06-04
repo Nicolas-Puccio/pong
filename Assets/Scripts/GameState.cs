@@ -7,40 +7,42 @@ using Unity.Netcode;
 public class GameState : NetworkBehaviour
 {
 
-    #region Singleton
+  #region Singleton
 
-    private static GameState singleton;
+  private static GameState singleton;
 
-    // Public property to access the instance
-    public static GameState Singleton
+  // Public property to access the instance
+  public static GameState Singleton
+  {
+    get { return singleton; }
+  }
+
+  private void Awake()
+  {
+    // Ensure only one instance of the Singleton exists
+    if (singleton != null && singleton != this)
     {
-        get { return singleton; }
+      Destroy(gameObject);
+      return;
     }
 
-    private void Awake()
-    {
-        // Ensure only one instance of the Singleton exists
-        if (singleton != null && singleton != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
+    singleton = this;
+  }
 
-        singleton = this;
-    }
-    
-    #endregion
+  #endregion
 
-    //called by gamemode
-    [ClientRpc]
-    public void GameStartClientRpc() {
-        Debug.Log("GAME START");
-    }
+  //called by gamemode
+  [ClientRpc]
+  public void GameStartClientRpc()
+  {
+    Debug.Log("GAME START");
+  }
 
 
-    //called by playermovement
-    public void PlayerJoined(string position,bool isMe){
-        Debug.Log(position);
-        GameObject.Find($"score{position}").GetComponent<Text>().enabled = true;
-    }
+  //called by playermovement
+  public void PlayerJoined(string position, bool isMe)
+  {
+    Debug.Log(position);
+    GameObject.Find($"score{position}").GetComponent<Text>().enabled = true;
+  }
 }

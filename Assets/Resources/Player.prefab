@@ -205,7 +205,7 @@ MonoBehaviour:
   UseQuaternionCompression: 0
   UseHalfFloatPrecision: 0
   InLocalSpace: 0
-  Interpolate: 1
+  Interpolate: 0
   SlerpPosition: 0
 --- !u!1 &6516199301636497139
 GameObject:
