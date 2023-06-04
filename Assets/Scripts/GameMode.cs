@@ -17,7 +17,7 @@ public class GameMode : NetworkBehaviour
     get { return singleton; }
   }
 
-  private void Awake()
+  void Start()
   {
     //load Wall Resource
     if (!wallPrefab)
@@ -53,6 +53,25 @@ public class GameMode : NetworkBehaviour
   static GameObject ballPrefab;
   static GameObject pickablePrefab;
 
+
+  Transform wallLeft;
+  Transform wallRight;
+
+
+  void Update()
+  {
+    if (wallLeft)
+    {
+      wallLeft.position = new Vector2(-BackgroundSize.backgroundSize / 2, 0);
+      wallLeft.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
+    }
+
+    if (wallRight)
+    {
+      wallRight.position = new Vector2(BackgroundSize.backgroundSize / 2, 0);
+      wallRight.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
+    }
+  }
 
 
   public override void OnNetworkSpawn()
@@ -102,6 +121,7 @@ public class GameMode : NetworkBehaviour
       wall.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
       wall.GetComponent<NetworkObject>().Spawn();
       wall.name = "wallleft";
+      wallLeft = wall.transform;
     }
     if (nextPos < 3)
     {
@@ -109,6 +129,7 @@ public class GameMode : NetworkBehaviour
       wall.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
       wall.GetComponent<NetworkObject>().Spawn();
       wall.name = "wallright";
+      wallRight = wall.transform;
     }
   }
 
@@ -158,4 +179,8 @@ public class GameMode : NetworkBehaviour
   }
 
 
+  public void ChangeCameraSize(float size)
+  {
+    GameState.Singleton.CameraSizeClientRpc(size);
+  }
 }

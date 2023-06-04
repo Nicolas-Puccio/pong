@@ -17,7 +17,13 @@ public class CanvasBehaviour : MonoBehaviour
     get { return singleton; }
   }
 
-  private void Awake()
+
+  #endregion
+
+  //only on server
+  public GameObject startButton;
+
+  void Start()
   {
     // Ensure only one instance of the Singleton exists
     if (singleton != null && singleton != this)
@@ -27,15 +33,8 @@ public class CanvasBehaviour : MonoBehaviour
     }
 
     singleton = this;
-  }
 
-  #endregion
 
-  //only on server
-  public GameObject startButton;
-
-  void Start()
-  {
     //sets position of score texts in client and server
     int offset = Screen.height / 2 - 25;
     foreach (RectTransform son in transform.GetComponentsInChildren<Transform>())
@@ -75,6 +74,16 @@ public class CanvasBehaviour : MonoBehaviour
     if (Input.GetKeyDown(KeyCode.C))
     {
       NetworkManager.Singleton.StartClient();
+    }
+
+    if (Input.GetKeyDown(KeyCode.Z))
+    {
+      GameMode.Singleton.ChangeCameraSize(Camera.main.orthographicSize + 1);
+    }
+
+    if (Input.GetKeyDown(KeyCode.X))
+    {
+      GameMode.Singleton.ChangeCameraSize(Camera.main.orthographicSize - 1);
     }
   }
 }

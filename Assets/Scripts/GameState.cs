@@ -17,7 +17,7 @@ public class GameState : NetworkBehaviour
     get { return singleton; }
   }
 
-  private void Awake()
+  private void Start()
   {
     // Ensure only one instance of the Singleton exists
     if (singleton != null && singleton != this)
@@ -37,6 +37,16 @@ public class GameState : NetworkBehaviour
   {
     Debug.Log("GAME START");
   }
+
+
+
+  //called by gamemode
+  [ClientRpc]
+  public void CameraSizeClientRpc(float size)
+  {
+    Camera.main.orthographicSize = size;
+  }
+
 
 
   //called by playermovement

@@ -45,7 +45,12 @@ public class PlayerMovement : NetworkBehaviour
     // Calculate the new position based on the vertical input
     Vector3 newPosition = transform.position + new Vector3(position.Value == "top" || position.Value == "bot" ? input : 0f, position.Value == "left" || position.Value == "right" ? input : 0f, 0f);
 
-    // Move the object to the new position
+    float playerSpawnDistance = BackgroundSize.backgroundSize / 2 - playerOffsetFromEdge;
+
+    newPosition = new Vector2(position.Value == "top" || position.Value == "bot" ? newPosition.x : position.Value == "right" ? playerSpawnDistance : -playerSpawnDistance,
+    position.Value == "left" || position.Value == "right" ? newPosition.y : position.Value == "top" ? playerSpawnDistance : -playerSpawnDistance);
+
+
     transform.position = newPosition;
   }
 }
