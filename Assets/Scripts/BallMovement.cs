@@ -5,6 +5,9 @@ using Unity.Netcode;
 
 public class BallMovement : NetworkBehaviour
 {
+  bool validPosition = true;
+  bool destroyed;
+
   [SerializeField]
   int speed = 10;
 
@@ -20,7 +23,10 @@ public class BallMovement : NetworkBehaviour
   public bool canWack = true;//set to false when it does, set to true oncollisionenter
 
 
-  public bool invertNext = false;
+  public bool invertNext;
+
+
+  public bool invertGameRule;
 
   #endregion
 
@@ -42,8 +48,20 @@ public class BallMovement : NetworkBehaviour
 
   void OnCollisionEnter2D(Collision2D col)
   {
+    if (destroyed)
+    {
+      Debug.Log("NICE");
+      return;
+    }
+
     if (col.gameObject.CompareTag("Player"))
     {
+      if (invertGameRule)
+      {
+        OffLimit(col.gameObject.GetComponent<PlayerMovement>().position.Value.ToString());
+        return;
+      }
+
       lastPlayerHit = col.gameObject;
       canWack = true;
 
@@ -63,12 +81,22 @@ public class BallMovement : NetworkBehaviour
       // If the magnitude is below the minimum, clamp it to the minimum speed
       rb.velocity = rb.velocity.normalized * speed;
     }
+
+    //limits ball speed, usually increases when multiple balls spawn together
+    if (rb.velocity.magnitude > speed)
+    {
+      // If the magnitude is below the minimum, clamp it to the minimum speed
+      rb.velocity = rb.velocity.normalized * speed;
+    }
   }
 
 
 
   void FixedUpdate()
   {
+    if (destroyed)
+      Debug.LogError("DUDE WTFDASSADSADSADSADAS");
+
     if (wackyChance != 0 && canWack)
     {
       //si esta cerca de la pared derecha o izquierda
@@ -98,31 +126,87 @@ public class BallMovement : NetworkBehaviour
 
 
     //-coudl check if it was close to hitting another wall and count towards both players
-    if (transform.localPosition.x > BackgroundSize.backgroundSize / 2)
+    if (transform.localPosition.x > BackgroundSize.backgroundSize / 2 && rb.velocity.x > 0)
     {
-      OffLimit("right");
+      if (!invertGameRule)
+        OffLimit("right");
+
+      else if (!validPosition)
+      {
+        HandleNotValidPosition();
+        return;
+      }
+      else
+      {
+        validPosition = false;
+        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
+      }
     }
-    else if (transform.localPosition.x < -BackgroundSize.backgroundSize / 2)
+    else if (transform.localPosition.x < -BackgroundSize.backgroundSize / 2 && rb.velocity.x < 0)
     {
-      OffLimit("left");
+      if (!invertGameRule)
+        OffLimit("left");
+
+      else if (!validPosition)
+      {
+        HandleNotValidPosition();
+        return;
+      }
+      else
+      {
+        validPosition = false;
+        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
+      }
     }
-    else if (transform.localPosition.y > BackgroundSize.backgroundSize / 2)
+    else if (transform.localPosition.y > BackgroundSize.backgroundSize / 2 && rb.velocity.y > 0)
     {
-      OffLimit("top");
+      if (!invertGameRule)
+        OffLimit("top");
+
+      else if (!validPosition)
+      {
+        HandleNotValidPosition();
+        return;
+      }
+      else
+      {
+        validPosition = false;
+        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
+      }
     }
-    else if (transform.localPosition.y < -BackgroundSize.backgroundSize / 2)
+    else if (transform.localPosition.y < -BackgroundSize.backgroundSize / 2 && rb.velocity.y < 0)
     {
-      OffLimit("bot");
+      if (!invertGameRule)
+        OffLimit("bot");
+
+      else if (!validPosition)
+      {
+        HandleNotValidPosition();
+        return;
+      }
+      else
+      {
+        validPosition = false;
+        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
+      }
     }
+    else
+      validPosition = true;
   }
 
 
 
   void OffLimit(string pos)
   {
+    destroyed = true;
+
     GameMode.singleton.Shock(pos);
 
     GetComponent<NetworkObject>().Despawn();
-    DestroyImmediate(gameObject);
+  }
+
+  void HandleNotValidPosition()
+  {
+    OffLimit("");
   }
 }

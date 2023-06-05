@@ -19,6 +19,9 @@ public class Pickable : NetworkBehaviour
 
   public MapSizeProperties mapSizeProperties;
 
+  public InvertGameRuleProperties invertGameRuleProperties;
+
+
   static GameObject ballPrefab;
 
 
@@ -36,7 +39,7 @@ public class Pickable : NetworkBehaviour
     if (!ballPrefab)
       ballPrefab = ballPrefab = Resources.Load<GameObject>("Ball");
 
-    var random = Random.Range(0, 5);
+    var random = Random.Range(0, 6);
 
     switch (random)
     {
@@ -82,6 +85,10 @@ public class Pickable : NetworkBehaviour
         mapSizeProperties = new MapSizeProperties(Random.value > .5f ? 1 : -1);
         type.Value = "MapSize";
         break;
+      case 5:
+        invertGameRuleProperties = new InvertGameRuleProperties();
+        type.Value = "InvertGameRule";
+        break;
       default:
         Debug.LogError("Unknown powerup type.");
         break;
@@ -103,6 +110,7 @@ public class Pickable : NetworkBehaviour
       case "Wacky":
         GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 1f);
         break;
+
       case "InvertSelf":
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 1f, 1f);
         break;
@@ -115,8 +123,12 @@ public class Pickable : NetworkBehaviour
       case "InvertAll":
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 1f, 1f);
         break;
+
       case "MapSize":
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 0f, 1f);
+        break;
+      case "InvertGameRule":
+        GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
         break;
       default:
         Debug.LogError("Unknown powerup type2.");
@@ -207,6 +219,12 @@ public class Pickable : NetworkBehaviour
       GameMode.singleton.ChangeCameraSize(mapSizeProperties.amount);
     }
 
+    if (invertGameRuleProperties != null)
+    {
+      Debug.Log("pelota invertida");
+      ballMovement.invertGameRule = !ballMovement.invertGameRule;
+    }
+
 
     //Destroy self
     GetComponent<NetworkObject>().Despawn();
@@ -274,5 +292,16 @@ public class MapSizeProperties
   public MapSizeProperties(int amount)
   {
     this.amount = amount;
+  }
+}
+
+
+public class InvertGameRuleProperties
+{
+  public bool enabled; //size to add to camera
+
+  public InvertGameRuleProperties()
+  {
+    enabled = true;
   }
 }

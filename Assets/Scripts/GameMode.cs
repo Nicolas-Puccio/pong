@@ -124,32 +124,38 @@ public class GameMode : NetworkBehaviour
 
 
 
-  //if pos == "" should shock all
+  //if pos == "" should shock none
+  //if pos == "all" should shock all
   public void Shock(string pos)
   {
-    //-handle pos == ""
     if (pos == "")
     {
-      //call itself for all players?
-      return;
+      //workaround si la pelota entra en una posicion invalida llama a este metodo, no pude llamar al coroutine desde afuera del script asi q probe esto y anduvo, idk
+    }
+    else if (pos == "all")
+    {
+
+    }
+    else
+    {
+      CanvasBehaviour.singleton.IncreaseScore(pos);
     }
 
+    StartCoroutine(TryRespawnBall());
+  }
 
-
-
-    Text scoreText = GameObject.Find($"score{pos}").GetComponent<Text>();
-    scoreText.text = (int.Parse(scoreText.text) + 1).ToString();
+  public IEnumerator TryRespawnBall()
+  {
+    yield return new WaitForSeconds(.1f);
 
     GameObject[] balls = GameObject.FindGameObjectsWithTag("Ball");
-    if (balls.Length == 1)
+    if (balls.Length == 0)
     {
       GameObject ball = Instantiate(ballPrefab);
       ball.GetComponent<BallMovement>().enabled = true;
       ball.GetComponent<NetworkObject>().Spawn();
     }
   }
-
-
 
   IEnumerator SpawnPickable()
   {
