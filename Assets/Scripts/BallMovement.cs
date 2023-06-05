@@ -9,7 +9,7 @@ public class BallMovement : NetworkBehaviour
   int speed = 10;
 
 
-  GameObject lastPlayerHit;
+  public GameObject lastPlayerHit;
 
   Rigidbody2D rb;
 
@@ -19,12 +19,17 @@ public class BallMovement : NetworkBehaviour
   public int wackyChance = 0;
   public bool canWack = true;//set to false when it does, set to true oncollisionenter
 
+
+  public bool invertNext = false;
+
   #endregion
 
 
-
-  public void Start()
+  public override void OnNetworkSpawn()
   {
+    if (!IsHost)
+      return;
+
     rb = GetComponent<Rigidbody2D>();
 
     Vector2 direction = RotationHelper.DegreesToVector2(Random.Range(0f, 360f));
@@ -41,6 +46,14 @@ public class BallMovement : NetworkBehaviour
     {
       lastPlayerHit = col.gameObject;
       canWack = true;
+
+      //invert input
+      if (invertNext)
+      {
+        invertNext = false;
+        lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value = -lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value;
+      }
+
     }
 
 
@@ -107,7 +120,7 @@ public class BallMovement : NetworkBehaviour
 
   void OffLimit(string pos)
   {
-    GameMode.Singleton.Shock(pos);
+    GameMode.singleton.Shock(pos);
 
     GetComponent<NetworkObject>().Despawn();
     DestroyImmediate(gameObject);
