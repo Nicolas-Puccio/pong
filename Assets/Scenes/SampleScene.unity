@@ -1015,6 +1015,7 @@ GameObject:
   - component: {fileID: 1360279008}
   - component: {fileID: 1360279007}
   - component: {fileID: 1360279011}
+  - component: {fileID: 1360279012}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -1123,7 +1124,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8b10a02dbdd710e4fbd668d345005994, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scoreleft:
+    m_InternalValue: 0
+  scoreright:
+    m_InternalValue: 0
+  scoretop:
+    m_InternalValue: 0
+  scorebot:
+    m_InternalValue: 0
   startButton: {fileID: 1086148435}
+--- !u!114 &1360279012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360279006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1950777221
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1 &1466419758
 GameObject:
   m_ObjectHideFlags: 0

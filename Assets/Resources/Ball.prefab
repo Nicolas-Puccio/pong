@@ -135,6 +135,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 10
+  lastPlayerHit: {fileID: 0}
+  wackyChance: 0
+  canWack: 1
+  invertNext: 0
+  invertGameRule: 0
 --- !u!50 &5854338234747931783
 Rigidbody2D:
   serializedVersion: 4

@@ -4,17 +4,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 
-public class CanvasBehaviour : MonoBehaviour
+public class CanvasBehaviour : NetworkBehaviour
 {
-
-  #region Singleton
-
   public static CanvasBehaviour singleton;
 
 
 
 
-  #endregion
+  public NetworkVariable<int> scoreleft;
+  public NetworkVariable<int> scoreright;
+  public NetworkVariable<int> scoretop;
+  public NetworkVariable<int> scorebot;
+
 
   //only on server
   public GameObject startButton;
@@ -50,6 +51,34 @@ public class CanvasBehaviour : MonoBehaviour
     startButton.SetActive(true);
   }
 
+  public void FixedUpdate()
+  {
+    foreach (RectTransform son in transform.GetComponentsInChildren<RectTransform>())
+    {
+      if (son.name == "scoretop")
+        son.GetComponent<Text>().text = scoretop.Value.ToString();
+      if (son.name == "scorebot")
+        son.GetComponent<Text>().text = scorebot.Value.ToString();
+      if (son.name == "scoreleft")
+        son.GetComponent<Text>().text = scoreleft.Value.ToString();
+      if (son.name == "scoreright")
+        son.GetComponent<Text>().text = scoreright.Value.ToString();
+    }
+  }
+
+
+
+  public void IncreaseScore(string pos)
+  {
+    if (pos == "top")
+      scoretop.Value++;
+    if (pos == "bot")
+      scorebot.Value++;
+    if (pos == "left")
+      scoreleft.Value++;
+    if (pos == "right")
+      scoreright.Value++;
+  }
 
 
 
