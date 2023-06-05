@@ -17,6 +17,8 @@ public class Pickable : NetworkBehaviour
 
   public InvertInputProperties invertInputProperties;
 
+  public MapSizeProperties mapSizeProperties;
+
   static GameObject ballPrefab;
 
 
@@ -34,7 +36,7 @@ public class Pickable : NetworkBehaviour
     if (!ballPrefab)
       ballPrefab = ballPrefab = Resources.Load<GameObject>("Ball");
 
-    var random = Random.Range(0, 4);
+    var random = Random.Range(0, 5);
 
     switch (random)
     {
@@ -76,6 +78,10 @@ public class Pickable : NetworkBehaviour
           type.Value = "InvertAll";
         }
         break;
+      case 4:
+        mapSizeProperties = new MapSizeProperties(Random.value > .5f ? 1 : -1);
+        type.Value = "MapSize";
+        break;
       default:
         Debug.LogError("Unknown powerup type.");
         break;
@@ -108,6 +114,9 @@ public class Pickable : NetworkBehaviour
         break;
       case "InvertAll":
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 1f, 1f);
+        break;
+      case "MapSize":
+        GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 0f, 1f);
         break;
       default:
         Debug.LogError("Unknown powerup type2.");
@@ -190,6 +199,12 @@ public class Pickable : NetworkBehaviour
             player.GetComponent<PlayerMovement>().inputDirection.Value = -player.GetComponent<PlayerMovement>().inputDirection.Value;
         }
       }
+    }
+
+
+    if (mapSizeProperties != null)
+    {
+      GameMode.singleton.ChangeCameraSize(mapSizeProperties.amount);
     }
 
 

@@ -41,7 +41,7 @@ public class GameState : NetworkBehaviour
   [ClientRpc]
   public void CameraSizeClientRpc(float size)
   {
-    cameraSize = size;
+    cameraSize += size;
   }
 
   void Update()

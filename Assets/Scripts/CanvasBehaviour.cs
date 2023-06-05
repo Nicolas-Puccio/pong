@@ -67,12 +67,12 @@ public class CanvasBehaviour : MonoBehaviour
 
     if (Input.GetKeyDown(KeyCode.Z))
     {
-      GameMode.singleton.ChangeCameraSize(Camera.main.orthographicSize + 1);
+      GameMode.singleton.ChangeCameraSize(1);
     }
 
     if (Input.GetKeyDown(KeyCode.X))
     {
-      GameMode.singleton.ChangeCameraSize(Camera.main.orthographicSize - 1);
+      GameMode.singleton.ChangeCameraSize(-1);
     }
   }
 }
