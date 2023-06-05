@@ -4,6 +4,8 @@ using Unity.Collections;
 
 public class Pickable : NetworkBehaviour
 {
+  bool destroyed;
+
   public NetworkVariable<FixedString32Bytes> type = new();
 
 
@@ -41,7 +43,7 @@ public class Pickable : NetworkBehaviour
         type.Value = "Multiply";
         break;
       case 1:
-        shockProperties = new ShockProperties(true,false,true);//-
+        shockProperties = new ShockProperties(true, false, true);//-
         type.Value = "Shock";
         break;
       case 2:
@@ -123,6 +125,13 @@ public class Pickable : NetworkBehaviour
     if (!col.gameObject.CompareTag("Ball"))
       return;
 
+    if (destroyed)
+    {
+      return;
+    }
+
+    destroyed = true;
+
     BallMovement ballMovement = col.GetComponent<BallMovement>();
 
     //-disable self to avoid infinite loop... do i really need this?
@@ -168,7 +177,8 @@ public class Pickable : NetworkBehaviour
 
       if (invertInputProperties.invertSelf)
       {
-        ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value = -ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value;
+        if (ballMovement.lastPlayerHit != null)
+          ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value = -ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value;
       }
 
       if (invertInputProperties.invertEnemies)
@@ -182,8 +192,6 @@ public class Pickable : NetworkBehaviour
       }
     }
 
-
-    Debug.Log("destroy pickable");
 
     //Destroy self
     GetComponent<NetworkObject>().Despawn();
