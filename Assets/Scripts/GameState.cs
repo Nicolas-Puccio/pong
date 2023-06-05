@@ -9,11 +9,19 @@ public class GameState : NetworkBehaviour
 
   #region Singleton
 
+  public float cameraLerpSpeed;
+  float cameraSize;
+
   public static GameState singleton;
 
   private void Start()
   {
     singleton = this;
+
+    if (cameraLerpSpeed == 0f)
+      Debug.LogError("cameraLerpSpeed not set");
+
+    cameraSize = Camera.main.orthographicSize;
   }
 
   #endregion
@@ -33,9 +41,13 @@ public class GameState : NetworkBehaviour
   [ClientRpc]
   public void CameraSizeClientRpc(float size)
   {
-    Camera.main.orthographicSize = size;
+    cameraSize = size;
   }
 
+  void Update()
+  {
+    Camera.main.orthographicSize = Mathf.Lerp(Camera.main.orthographicSize, cameraSize, cameraLerpSpeed * Time.deltaTime);
+  }
 
 
   //called by playermovement
