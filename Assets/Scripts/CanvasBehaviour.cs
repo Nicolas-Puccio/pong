@@ -9,13 +9,9 @@ public class CanvasBehaviour : MonoBehaviour
 
   #region Singleton
 
-  private static CanvasBehaviour singleton;
+  public static CanvasBehaviour singleton;
 
-  // Public property to access the instance
-  public static CanvasBehaviour Singleton
-  {
-    get { return singleton; }
-  }
+
 
 
   #endregion
@@ -25,23 +21,16 @@ public class CanvasBehaviour : MonoBehaviour
 
   void Start()
   {
-    // Ensure only one instance of the Singleton exists
-    if (singleton != null && singleton != this)
-    {
-      Destroy(gameObject);
-      return;
-    }
-
     singleton = this;
 
 
     //sets position of score texts in client and server
     int offset = Screen.height / 2 - 25;
-    foreach (RectTransform son in transform.GetComponentsInChildren<Transform>())
+    foreach (RectTransform son in transform.GetComponentsInChildren<RectTransform>())
     {
       if (son.name.StartsWith("score"))
       {
-        string pos = son.name.Substring(5);
+        string pos = son.name[5..];
         son.anchoredPosition = pos == "top" ? new Vector2(0, offset) : pos == "right" ? new Vector2(offset, 0) : pos == "bot" ? new Vector2(0, -offset) : new Vector2(-offset, 0);
       }
     }
@@ -51,7 +40,7 @@ public class CanvasBehaviour : MonoBehaviour
   //only on server
   public void StartButton()
   {
-    GameMode.Singleton.StartGame();
+    GameMode.singleton.StartGame();
     Destroy(startButton);
   }
 
@@ -78,12 +67,12 @@ public class CanvasBehaviour : MonoBehaviour
 
     if (Input.GetKeyDown(KeyCode.Z))
     {
-      GameMode.Singleton.ChangeCameraSize(Camera.main.orthographicSize + 1);
+      GameMode.singleton.ChangeCameraSize(Camera.main.orthographicSize + 1);
     }
 
     if (Input.GetKeyDown(KeyCode.X))
     {
-      GameMode.Singleton.ChangeCameraSize(Camera.main.orthographicSize - 1);
+      GameMode.singleton.ChangeCameraSize(Camera.main.orthographicSize - 1);
     }
   }
 }

@@ -9,13 +9,8 @@ public class GameMode : NetworkBehaviour
 
   #region Singleton and Resources.Load
 
-  private static GameMode singleton;
+  public static GameMode singleton;
 
-  // Public property to access the instance
-  public static GameMode Singleton
-  {
-    get { return singleton; }
-  }
 
   void Start()
   {
@@ -32,20 +27,13 @@ public class GameMode : NetworkBehaviour
       pickablePrefab = Resources.Load<GameObject>("Pickable");
 
 
-    // Ensure only one instance of the Singleton exists
-    if (singleton != null && singleton != this)
-    {
-      Destroy(gameObject);
-      return;
-    }
-
     singleton = this;
   }
 
   #endregion
 
 
-  string[] positions = new string[] { "top", "bot", "right", "left" };
+  readonly string[] positions = new string[] { "top", "bot", "right", "left" };
   int nextPos = 0; //index de la posicion del proximo jugador
 
 
@@ -85,13 +73,13 @@ public class GameMode : NetworkBehaviour
 
 
   //used by playermovement    
-  public string getPos()
+  public string GetPos()
   {
 
     //when there are at least 2 players
     if (nextPos == 0)//-change to 1
     {
-      CanvasBehaviour.Singleton.EnableButton();
+      CanvasBehaviour.singleton.EnableButton();
     }
 
     return positions[nextPos++];
@@ -107,7 +95,7 @@ public class GameMode : NetworkBehaviour
     ball.GetComponent<NetworkObject>().Spawn();
 
     SpawnWalls();
-    GameState.Singleton.GameStartClientRpc();
+    GameState.singleton.GameStartClientRpc();
     StartCoroutine(SpawnPickable());
   }
 
@@ -119,6 +107,7 @@ public class GameMode : NetworkBehaviour
     {
       GameObject wall = Instantiate(wallPrefab, new Vector2(-BackgroundSize.backgroundSize / 2, 0), Quaternion.identity);
       wall.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
+
       wall.GetComponent<NetworkObject>().Spawn();
       wall.name = "wallleft";
       wallLeft = wall.transform;
@@ -166,7 +155,7 @@ public class GameMode : NetworkBehaviour
   {
     while (true)
     {
-      Vector2 position = new Vector2(Random.Range(-BackgroundSize.backgroundSize / 3, BackgroundSize.backgroundSize / 3),
+      Vector2 position = new(Random.Range(-BackgroundSize.backgroundSize / 3, BackgroundSize.backgroundSize / 3),
           Random.Range(-BackgroundSize.backgroundSize / 3, BackgroundSize.backgroundSize / 3));
 
 
@@ -181,6 +170,6 @@ public class GameMode : NetworkBehaviour
 
   public void ChangeCameraSize(float size)
   {
-    GameState.Singleton.CameraSizeClientRpc(size);
+    GameState.singleton.CameraSizeClientRpc(size);
   }
 }
