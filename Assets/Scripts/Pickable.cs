@@ -6,20 +6,10 @@ public class Pickable : NetworkBehaviour
 {
   bool destroyed;
 
-  public NetworkVariable<FixedString32Bytes> type = new();
+  public NetworkVariable<FixedString32Bytes> type = new(); // to sync the type to the clients
 
+  public IPickableProperties pickableProperties;
 
-
-  //-deberia usar herencia
-  public MultiplyProperties multiplyProperties;
-  public ShockProperties shockProperties;
-  public WackyBallProperties wackyBallProperties;
-
-  public InvertInputProperties invertInputProperties;
-
-  public MapSizeProperties mapSizeProperties;
-
-  public InvertGameRuleProperties invertGameRuleProperties;
 
 
   static GameObject ballPrefab;
@@ -44,51 +34,82 @@ public class Pickable : NetworkBehaviour
     switch (random)
     {
       case 0:
-        multiplyProperties = new MultiplyProperties(Random.Range(1, 5));
+        pickableProperties = new MultiplyProperties(Random.Range(1, 5));
         type.Value = "Multiply";
         break;
       case 1:
-        shockProperties = new ShockProperties(true, false, true);//-
-        type.Value = "Shock";
+        //shock self 25% chance
+        if (Random.value > .75f)
+        {
+          pickableProperties = new ShockProperties(true, false, false);
+          type.Value = "ShockSelf";
+        }
+        //shock next player 25% chance
+        else if (Random.value > .5f)
+        {
+          pickableProperties = new ShockProperties(false, true, false);
+          type.Value = "ShockNext";
+        }
+        //shock only enemies 25% chance
+        else if (Random.value > .25f)
+        {
+          pickableProperties = new ShockProperties(false, false, true);
+          type.Value = "ShockEnemies";
+        }
+        //shock everyone 25% chance
+        else
+        {
+          pickableProperties = new ShockProperties(true, false, true);
+          type.Value = "ShockAll";
+        }
         break;
       case 2:
-        wackyBallProperties = new WackyBallProperties(100);
+        pickableProperties = new WackyPickableProperties();
         type.Value = "Wacky";
         break;
       case 3:
         //invert self 25% chance
         if (Random.value > .75f)
         {
-          invertInputProperties = new InvertInputProperties(true, false, false);
+          pickableProperties = new InvertInputProperties(true, false, false);
           type.Value = "InvertSelf";
         }
         //invert next player 25% chance
         else if (Random.value > .5f)
         {
-          invertInputProperties = new InvertInputProperties(false, true, false);
+          pickableProperties = new InvertInputProperties(false, true, false);
           type.Value = "InvertNext";
         }
         //invert only enemies 25% chance
         else if (Random.value > .25f)
         {
-          invertInputProperties = new InvertInputProperties(false, false, true);
+          pickableProperties = new InvertInputProperties(false, false, true);
           type.Value = "InvertEnemies";
         }
         //invert everyone 25% chance
         else
         {
-          invertInputProperties = new InvertInputProperties(true, false, true);
+          pickableProperties = new InvertInputProperties(true, false, true);
           type.Value = "InvertAll";
         }
         break;
       case 4:
-        mapSizeProperties = new MapSizeProperties(Random.value > .5f ? 1 : -1);
-        type.Value = "MapSize";
+        if (Random.value > .5f)
+        {
+          pickableProperties = new MapSizeProperties(1);
+          type.Value = "MapSize+";
+        }
+        else
+        {
+          pickableProperties = new MapSizeProperties(-1);
+          type.Value = "MapSize-";
+        }
         break;
       case 5:
-        invertGameRuleProperties = new InvertGameRuleProperties();
+        pickableProperties = new InvertGameRuleProperties();
         type.Value = "InvertGameRule";
         break;
+
       default:
         Debug.LogError("Unknown powerup type.");
         break;
@@ -104,9 +125,20 @@ public class Pickable : NetworkBehaviour
       case "Multiply":
         GetComponent<SpriteRenderer>().color = new Color(0.5f, .5f, 0.5f, 1f);
         break;
-      case "Shock":
+
+      case "ShockSelf":
         GetComponent<SpriteRenderer>().color = new Color(1f, 0f, 0f, 1f);
         break;
+      case "ShockNext":
+        GetComponent<SpriteRenderer>().color = new Color(1f, 0f, 0f, 1f);
+        break;
+      case "ShockEnemies":
+        GetComponent<SpriteRenderer>().color = new Color(1f, 0f, 0f, 1f);
+        break;
+      case "ShockAll":
+        GetComponent<SpriteRenderer>().color = new Color(1f, 0f, 0f, 1f);
+        break;
+
       case "Wacky":
         GetComponent<SpriteRenderer>().color = new Color(0f, 1f, 0f, 1f);
         break;
@@ -124,12 +156,17 @@ public class Pickable : NetworkBehaviour
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 1f, 1f);
         break;
 
-      case "MapSize":
+      case "MapSize+":
         GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 0f, 1f);
         break;
+      case "MapSize-":
+        GetComponent<SpriteRenderer>().color = new Color(0f, 0f, 0f, 1f);
+        break;
+
       case "InvertGameRule":
         GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
         break;
+
       default:
         Debug.LogError("Unknown powerup type2.");
         break;
@@ -147,20 +184,27 @@ public class Pickable : NetworkBehaviour
       return;
 
     if (destroyed)
-    {
       return;
-    }
 
+    Debug.Log(pickableProperties);
+    Debug.Log(type.Value.ToString());
+
+    //Destroy self
     destroyed = true;
+    GetComponent<NetworkObject>().Despawn();
 
     BallMovement ballMovement = col.GetComponent<BallMovement>();
 
-    //-disable self to avoid infinite loop... do i really need this?
-    GetComponent<CircleCollider2D>().enabled = false;
 
 
 
-    if (multiplyProperties != null)
+
+
+
+
+
+
+    if (pickableProperties is MultiplyProperties multiplyProperties)
     {
       for (int i = 0; i < multiplyProperties.amount; i++)
       {
@@ -168,39 +212,29 @@ public class Pickable : NetworkBehaviour
         ball.GetComponent<BallMovement>().enabled = true;
         ball.GetComponent<NetworkObject>().Spawn();
       }
-
     }
 
 
 
-    if (shockProperties != null)
+    if (pickableProperties is InvertGameRuleProperties)
     {
-      //-get pos of player
-      string pos = "";
-
-
-
-      GameMode.singleton.Shock(pos);
+      ballMovement.SetPickable(new InvertGameRule(ballMovement));
     }
 
 
 
-    if (wackyBallProperties != null)
+    if (pickableProperties is InvertInputProperties invertInputProperties)
     {
-      ballMovement.wackyChance = wackyBallProperties.steerChance;
-    }
+      if (invertInputProperties.invertNext)
+        ballMovement.SetPickable(new InvertGameRule(ballMovement));
 
-
-
-    if (invertInputProperties != null)
-    {
-      ballMovement.invertNext = invertInputProperties.invertNext;
 
       if (invertInputProperties.invertSelf)
       {
         if (ballMovement.lastPlayerHit != null)
           ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value = -ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value;
       }
+
 
       if (invertInputProperties.invertEnemies)
       {
@@ -214,26 +248,78 @@ public class Pickable : NetworkBehaviour
     }
 
 
-    if (mapSizeProperties != null)
+
+    if (pickableProperties is ShockProperties shockProperties)
+    {
+      if (shockProperties.shockNext)
+        ballMovement.SetPickable(new ShockPickable(ballMovement));
+
+
+      if (shockProperties.shockSelf)
+      {
+        if (ballMovement.lastPlayerHit != null)
+          GameMode.singleton.Shock(ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().position.Value.ToString());
+      }
+
+
+      if (shockProperties.shockEnemies)
+      {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        foreach (GameObject player in players)
+        {
+          if (player != ballMovement.lastPlayerHit)
+            GameMode.singleton.Shock(player.GetComponent<PlayerMovement>().position.Value.ToString());
+        }
+      }
+    }
+
+
+
+    if (pickableProperties is WackyPickableProperties)
+    {
+      ballMovement.SetPickable(new WackyPickable(ballMovement, 100));
+    }
+
+
+
+    if (pickableProperties is MapSizeProperties mapSizeProperties)
     {
       GameMode.singleton.ChangeCameraSize(mapSizeProperties.amount);
     }
-
-    if (invertGameRuleProperties != null)
-    {
-      Debug.Log("pelota invertida");
-      ballMovement.invertGameRule = !ballMovement.invertGameRule;
-    }
-
-
-    //Destroy self
-    GetComponent<NetworkObject>().Despawn();
   }
 }
 
-public class MultiplyProperties
+
+
+
+
+
+
+
+
+
+public interface IPickableProperties
+{ }
+
+
+
+
+
+public class MapSizeProperties : IPickableProperties
 {
-  public int amount; // amount of new balls spawned
+  public int amount; //size to add to camera (can be negative so it subtracts)
+
+  public MapSizeProperties(int amount)
+  {
+    this.amount = amount;
+  }
+}
+
+
+
+public class MultiplyProperties : IPickableProperties
+{
+  public int amount; //new balls spawned
 
   public MultiplyProperties(int amount)
   {
@@ -242,34 +328,21 @@ public class MultiplyProperties
 }
 
 
-public class ShockProperties
+
+public class WackyPickableProperties : IPickableProperties //-add chance?
 {
-  public bool shockSelf; //shock player who touch it
-  public bool shockNext; //shock next player that touches it
-  public bool shockEnemies; //shock enemies
-
-  //si Self y Enemies son ambas verdaderas entonces shockea a todos
-
-  public ShockProperties(bool shockSelf, bool shockNext, bool shockEnemies)
-  {
-    this.shockSelf = shockSelf;
-    this.shockNext = shockNext;
-    this.shockEnemies = shockEnemies;
-  }
+  //public int wackChance = 100; //Random.Range(1, 101); //1-100 chance the ball stears
 }
 
 
-public class WackyBallProperties
-{
-  public int steerChance; //0-100 chance the ball stears
 
-  public WackyBallProperties(int steerChance)
-  {
-    this.steerChance = steerChance;
-  }
+public class InvertGameRuleProperties : IPickableProperties
+{
 }
 
-public class InvertInputProperties
+
+
+public class InvertInputProperties : IPickableProperties
 {
   public bool invertSelf; //invert input of player who touch it
   public bool invertNext; //invert input of next player that touches it
@@ -285,23 +358,20 @@ public class InvertInputProperties
   }
 }
 
-public class MapSizeProperties
+
+
+public class ShockProperties : IPickableProperties
 {
-  public int amount; //size to add to camera
+  public bool shockSelf; //shock player who touch it
+  public bool shockNext; //shock next player that touches it
+  public bool shockEnemies; //shock enemies
 
-  public MapSizeProperties(int amount)
+  //si Self y Enemies son ambas verdaderas entonces invierte a todos
+
+  public ShockProperties(bool shockSelf, bool shockNext, bool shockEnemies)
   {
-    this.amount = amount;
-  }
-}
-
-
-public class InvertGameRuleProperties
-{
-  public bool enabled; //size to add to camera
-
-  public InvertGameRuleProperties()
-  {
-    enabled = true;
+    this.shockSelf = shockSelf;
+    this.shockNext = shockNext;
+    this.shockEnemies = shockEnemies;
   }
 }

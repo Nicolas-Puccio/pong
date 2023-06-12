@@ -169,7 +169,7 @@ public class GameMode : NetworkBehaviour
       pickable.GetComponent<Pickable>().enabled = true;
       pickable.GetComponent<NetworkObject>().Spawn();
 
-      yield return new WaitForSeconds(2);
+      yield return new WaitForSeconds(5);
     }
   }
 

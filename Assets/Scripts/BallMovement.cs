@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 
 public class BallMovement : NetworkBehaviour
 {
-  bool validPosition = true;
+  IPickable pickable;
   bool destroyed;
 
   [SerializeField]
@@ -14,21 +12,14 @@ public class BallMovement : NetworkBehaviour
 
   public GameObject lastPlayerHit;
 
-  Rigidbody2D rb;
+  public Rigidbody2D rb;
 
 
-  #region powerups data
-
-  public int wackyChance = 0;
-  public bool canWack = true;//set to false when it does, set to true oncollisionenter
-
-
-  public bool invertNext;
-
-
-  public bool invertGameRule;
-
-  #endregion
+  public void SetPickable(IPickable pickable = null)
+  {
+    this.pickable = pickable;
+    //-here call a function that changes ball image?
+  }
 
 
   public override void OnNetworkSpawn()
@@ -48,31 +39,17 @@ public class BallMovement : NetworkBehaviour
 
   void OnCollisionEnter2D(Collision2D col)
   {
+    pickable?.OnCollisionEnter2D(col);
+
     if (destroyed)
-    {
-      Debug.Log("NICE");
       return;
-    }
+
 
     if (col.gameObject.CompareTag("Player"))
     {
-      if (invertGameRule)
-      {
-        OffLimit(col.gameObject.GetComponent<PlayerMovement>().position.Value.ToString());
-        return;
-      }
-
       lastPlayerHit = col.gameObject;
-      canWack = true;
-
-      //invert input
-      if (invertNext)
-      {
-        invertNext = false;
-        lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value = -lastPlayerHit.GetComponent<PlayerMovement>().inputDirection.Value;
-      }
-
     }
+
 
 
     //idk why balls lose velocity when colliding against each other despite both being bouncy, so i set a lower limit to magnitude
@@ -94,119 +71,192 @@ public class BallMovement : NetworkBehaviour
 
   void FixedUpdate()
   {
+    pickable?.FixedUpdate();
+
     if (destroyed)
-      Debug.LogError("DUDE WTFDASSADSADSADSADAS");
-
-    if (wackyChance != 0 && canWack)
-    {
-      //si esta cerca de la pared derecha o izquierda
-      if ((rb.velocity.x > 0 && transform.localPosition.x > BackgroundSize.backgroundSize / 3 && GameObject.Find("wallright") == null) ||
-      (rb.velocity.x < 0 && transform.localPosition.x < -BackgroundSize.backgroundSize / 3 && GameObject.Find("wallleft") == null))
-      {
-        if (Random.Range(0, 100) <= wackyChance)
-        {
-          rb.velocity = new Vector2(rb.velocity.x, -rb.velocity.y);
-          canWack = false;
-        }
-      }
-
-
-      //arriba o abajo
-      if ((rb.velocity.y > 0 && transform.localPosition.y > BackgroundSize.backgroundSize / 3) ||
-      (rb.velocity.y < 0 && transform.localPosition.y < -BackgroundSize.backgroundSize / 3))
-      {
-        if (Random.Range(0, 100) <= wackyChance)
-        {
-          rb.velocity = new Vector2(-rb.velocity.x, rb.velocity.y);
-          canWack = false;
-        }
-      }
-    }
+      return;
 
 
 
     //-coudl check if it was close to hitting another wall and count towards both players
     if (transform.localPosition.x > BackgroundSize.backgroundSize / 2 && rb.velocity.x > 0)
     {
-      if (!invertGameRule)
-        OffLimit("right");
-
-      else if (!validPosition)
-      {
-        HandleNotValidPosition();
-        return;
-      }
-      else
-      {
-        validPosition = false;
-        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
-      }
+      DestroyAndShock("right");
     }
     else if (transform.localPosition.x < -BackgroundSize.backgroundSize / 2 && rb.velocity.x < 0)
     {
-      if (!invertGameRule)
-        OffLimit("left");
-
-      else if (!validPosition)
-      {
-        HandleNotValidPosition();
-        return;
-      }
-      else
-      {
-        validPosition = false;
-        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
-      }
+      DestroyAndShock("left");
     }
     else if (transform.localPosition.y > BackgroundSize.backgroundSize / 2 && rb.velocity.y > 0)
     {
-      if (!invertGameRule)
-        OffLimit("top");
-
-      else if (!validPosition)
-      {
-        HandleNotValidPosition();
-        return;
-      }
-      else
-      {
-        validPosition = false;
-        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
-      }
+      DestroyAndShock("top");
     }
     else if (transform.localPosition.y < -BackgroundSize.backgroundSize / 2 && rb.velocity.y < 0)
     {
-      if (!invertGameRule)
-        OffLimit("bot");
-
-      else if (!validPosition)
-      {
-        HandleNotValidPosition();
-        return;
-      }
-      else
-      {
-        validPosition = false;
-        rb.velocity = new(-rb.velocity.x, -rb.velocity.y);
-      }
+      DestroyAndShock("bot");
     }
-    else
-      validPosition = true;
   }
 
 
 
-  void OffLimit(string pos)
+  public void DestroyAndShock(string pos)
   {
-    destroyed = true;
-
     GameMode.singleton.Shock(pos);
 
-    GetComponent<NetworkObject>().Despawn();
-  }
+    if (!destroyed)
+      GetComponent<NetworkObject>().Despawn();
 
-  void HandleNotValidPosition()
-  {
-    OffLimit("");
+    destroyed = true;
   }
 }
+
+
+
+#region IPickable
+
+public interface IPickable
+{
+  void OnCollisionEnter2D(Collision2D col) { }
+
+  void FixedUpdate() { }
+}
+
+
+
+public class ShockPickable : IPickable
+{
+  readonly BallMovement ballMovement;
+
+  public ShockPickable(BallMovement ballMovement)
+  {
+    this.ballMovement = ballMovement;
+  }
+
+
+  public void OnCollisionEnter2D(Collision2D col)
+  {
+    if (!col.gameObject.CompareTag("Player"))
+      return;
+
+    ballMovement.DestroyAndShock(col.gameObject.GetComponent<PlayerMovement>().position.Value.ToString());
+    ballMovement.SetPickable();
+  }
+}
+
+
+
+public class WackyPickable : IPickable
+{
+  readonly BallMovement ballMovement;
+
+
+  public int wackChance;
+  public bool canWack = true;
+
+  public WackyPickable(BallMovement ballMovement, int wackChance)
+  {
+    this.ballMovement = ballMovement;
+    this.wackChance = wackChance;
+  }
+
+  public void FixedUpdate()
+  {
+    if (!canWack)
+      return;
+
+
+    //si esta cerca de la pared derecha o izquierda
+    if ((ballMovement.rb.velocity.x > 0 && ballMovement.transform.localPosition.x > BackgroundSize.backgroundSize / 4 && GameObject.Find("wallright") == null) ||
+    (ballMovement.rb.velocity.x < 0 && ballMovement.transform.localPosition.x < -BackgroundSize.backgroundSize / 4 && GameObject.Find("wallleft") == null))
+    {
+      if (Random.Range(0, 100) <= wackChance)
+      {
+        ballMovement.rb.velocity = new Vector2(ballMovement.rb.velocity.x, -ballMovement.rb.velocity.y);
+        canWack = false;
+      }
+    }
+
+
+    //arriba o abajo
+    if ((ballMovement.rb.velocity.y > 0 && ballMovement.transform.localPosition.y > BackgroundSize.backgroundSize / 4) ||
+    (ballMovement.rb.velocity.y < 0 && ballMovement.transform.localPosition.y < -BackgroundSize.backgroundSize / 4))
+    {
+      if (Random.Range(0, 100) <= wackChance)
+      {
+        ballMovement.rb.velocity = new Vector2(-ballMovement.rb.velocity.x, ballMovement.rb.velocity.y);
+        canWack = false;
+      }
+    }
+  }
+
+  public void OnCollisionEnter2D(Collision2D col)
+  {
+    if (!col.gameObject.CompareTag("Player"))
+      return;
+
+    if (ballMovement.rb.velocity.x > 0 && ballMovement.transform.localPosition.x < 0 || // esta yendo a la derecha y esta en la izquierda
+     ballMovement.rb.velocity.x < 0 && ballMovement.transform.localPosition.x > 0 || // esta yendo izquierda y esta en la derecha
+     ballMovement.rb.velocity.y > 0 && ballMovement.transform.localPosition.y < 0 || // esta yendo arriba y esta abajo
+     ballMovement.rb.velocity.y < 0 && ballMovement.transform.localPosition.y > 0) // esta yendo abajo y esta arriba
+    {
+      canWack = true;
+    }
+  }
+}
+
+
+
+public class InvertInput : IPickable
+{
+  readonly BallMovement ballMovement;
+
+
+  public InvertInput(BallMovement ballMovement)
+  {
+    this.ballMovement = ballMovement;
+  }
+
+  public void OnCollisionEnter2D(Collision2D col)
+  {
+    if (!col.gameObject.CompareTag("Player"))
+      return;
+
+    PlayerMovement playerMovement = col.gameObject.GetComponent<PlayerMovement>();
+    playerMovement.inputDirection.Value = -playerMovement.inputDirection.Value;
+    ballMovement.SetPickable();
+  }
+}
+
+
+
+public class InvertGameRule : IPickable //finished
+{
+  readonly BallMovement ballMovement;
+
+
+  public InvertGameRule(BallMovement ballMovement)
+  {
+    this.ballMovement = ballMovement;
+  }
+
+  public void FixedUpdate()
+  {
+    if ((ballMovement.transform.localPosition.x > BackgroundSize.backgroundSize / 2 && ballMovement.rb.velocity.x > 0) ||
+        (ballMovement.transform.localPosition.x < -BackgroundSize.backgroundSize / 2 && ballMovement.rb.velocity.x < 0) ||
+        (ballMovement.transform.localPosition.y > BackgroundSize.backgroundSize / 2 && ballMovement.rb.velocity.y > 0) ||
+        (ballMovement.transform.localPosition.y < -BackgroundSize.backgroundSize / 2 && ballMovement.rb.velocity.y < 0))
+    {
+      ballMovement.rb.velocity = new(-ballMovement.rb.velocity.x, -ballMovement.rb.velocity.y);
+    }
+  }
+
+  public void OnCollisionEnter2D(Collision2D col)
+  {
+    if (!col.gameObject.CompareTag("Player"))
+      return;
+
+    ballMovement.DestroyAndShock(col.gameObject.GetComponent<PlayerMovement>().position.Value.ToString());
+  }
+}
+
+#endregion
