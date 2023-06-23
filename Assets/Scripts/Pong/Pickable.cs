@@ -27,7 +27,7 @@ public class Pickable : NetworkBehaviour
   void Init()
   {
     if (!ballPrefab)
-      ballPrefab = ballPrefab = Resources.Load<GameObject>("Ball");
+      ballPrefab = ballPrefab = Resources.Load<GameObject>("Pong/Ball");
 
     var random = Random.Range(0, 6);
 

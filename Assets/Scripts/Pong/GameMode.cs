@@ -16,15 +16,15 @@ public class GameMode : NetworkBehaviour
   {
     //load Wall Resource
     if (!wallPrefab)
-      wallPrefab = Resources.Load<GameObject>("Wall");
+      wallPrefab = Resources.Load<GameObject>("Pong/Wall");
 
     //load Ball Resource
     if (!ballPrefab)
-      ballPrefab = Resources.Load<GameObject>("Ball");
+      ballPrefab = Resources.Load<GameObject>("Pong/Ball");
 
     //load Pickable Resource
     if (!pickablePrefab)
-      pickablePrefab = Resources.Load<GameObject>("Pickable");
+      pickablePrefab = Resources.Load<GameObject>("Pong/Pickable");
 
 
     singleton = this;
@@ -90,7 +90,7 @@ public class GameMode : NetworkBehaviour
   public void StartGame()
   {
 
-    GameObject ball = Instantiate(Resources.Load<GameObject>("Ball"));
+    GameObject ball = Instantiate(ballPrefab);
     ball.GetComponent<BallMovement>().enabled = true;
     ball.GetComponent<NetworkObject>().Spawn();
 

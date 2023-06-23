@@ -51,8 +51,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 10
   playerOffsetFromEdge: 1
-  inputDirection:
-    m_InternalValue: 0
   position:
     m_InternalValue:
       utf8LengthInBytes: 0
@@ -88,6 +86,9 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
+  inputDirection:
+    m_InternalValue: 0
+  weak: 1
 --- !u!50 &1999335874989216899
 Rigidbody2D:
   serializedVersion: 4

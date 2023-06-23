@@ -48,7 +48,9 @@ public class BallMovement : NetworkBehaviour
     if (col.gameObject.CompareTag("Player"))
     {
       lastPlayerHit = col.gameObject;
+      lastPlayerHit.GetComponent<PlayerMovement>().TryToTilt(col, transform.position); //let player script handle tilting if weak
     }
+
 
 
 
@@ -229,7 +231,7 @@ public class InvertInput : IPickable
 
 
 
-public class InvertGameRule : IPickable //finished
+public class InvertGameRule : IPickable
 {
   readonly BallMovement ballMovement;
 
