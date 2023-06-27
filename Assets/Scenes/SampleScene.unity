@@ -504,6 +504,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 581797400780c54419cd1a20b124328f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  startButton: {fileID: 1086148435}
 --- !u!4 &1015119350
 Transform:
   m_ObjectHideFlags: 0
@@ -614,9 +615,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1360279011}
-        m_TargetAssemblyTypeName: CanvasBehaviour, Assembly-CSharp
-        m_MethodName: StartButton
+      - m_Target: {fileID: 1015119349}
+        m_TargetAssemblyTypeName: PongGameMode, Assembly-CSharp
+        m_MethodName: StartGame
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1132,7 +1133,6 @@ MonoBehaviour:
     m_InternalValue: 0
   scorebot:
     m_InternalValue: 0
-  startButton: {fileID: 1086148435}
 --- !u!114 &1360279012
 MonoBehaviour:
   m_ObjectHideFlags: 0

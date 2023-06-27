@@ -3,11 +3,16 @@ using Unity.Netcode;
 
 public class HippoPlayerController : NetworkBehaviour
 {
-  public NetworkVariable<bool> isMyTurn;
-  public void SetIsMyTurn(bool isMyTurn)
+  NetworkVariable<bool> isMyTurn;
+  public bool IsMyTurn
   {
-    this.isMyTurn.Value = isMyTurn;
+    get { return isMyTurn.Value; }
+    set { isMyTurn.Value = value; }
   }
+
+
+
+  void Start() { }//in order to disable script
 
 
 
@@ -21,16 +26,17 @@ public class HippoPlayerController : NetworkBehaviour
     if (IsOwner)
     {
       enabled = true;
-      Debug.Log("player disabled self");
+      Debug.Log("player enabled self");
     }
   }
 
-  void Start() { }
+
 
   void Update()
   {
     if (Input.GetMouseButtonDown(0))
     {
+      //-make ray only detect teeth? layer? tag?
       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
       RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
 
@@ -39,18 +45,19 @@ public class HippoPlayerController : NetworkBehaviour
         Debug.Log("CLICKED " + hit.collider.name);
 
         if (IsHost)
-          HippoGameMode.singleton.Touch(this, hit.transform);
+          HippoGameMode.singleton.Touch(this, hit.transform);//hostcalls touch
         else
-          TouchServerRpc(hit.transform.GetComponent<NetworkObject>().NetworkObjectId);
-
+          TouchServerRpc(hit.transform.GetComponent<NetworkObject>().NetworkObjectId);//clients call touch through a RPC
       }
     }
   }
 
 
+
   [ServerRpc]
   void TouchServerRpc(ulong networkObjectId)
   {
+    //finds tooth by networkObjectID
     NetworkObject tooth = NetworkManager.Singleton.SpawnManager.SpawnedObjects[networkObjectId];
     HippoGameMode.singleton.Touch(this, tooth.transform);
   }

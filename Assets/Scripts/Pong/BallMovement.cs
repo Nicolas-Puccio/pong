@@ -103,7 +103,7 @@ public class BallMovement : NetworkBehaviour
 
   public void DestroyAndShock(string pos)
   {
-    GameMode.singleton.Shock(pos);
+    PongGameMode.singleton.Shock(pos);
 
     if (!destroyed)
       GetComponent<NetworkObject>().Despawn();
@@ -127,7 +127,7 @@ public interface IPickable
 
 public class ShockPickable : IPickable
 {
-  readonly BallMovement ballMovement;
+  BallMovement ballMovement;
 
   public ShockPickable(BallMovement ballMovement)
   {
@@ -149,7 +149,7 @@ public class ShockPickable : IPickable
 
 public class WackyPickable : IPickable
 {
-  readonly BallMovement ballMovement;
+  BallMovement ballMovement;
 
 
   public int wackChance;
@@ -210,7 +210,7 @@ public class WackyPickable : IPickable
 
 public class InvertInput : IPickable
 {
-  readonly BallMovement ballMovement;
+  BallMovement ballMovement;
 
 
   public InvertInput(BallMovement ballMovement)
@@ -233,7 +233,7 @@ public class InvertInput : IPickable
 
 public class InvertGameRule : IPickable
 {
-  readonly BallMovement ballMovement;
+  BallMovement ballMovement;
 
 
   public InvertGameRule(BallMovement ballMovement)

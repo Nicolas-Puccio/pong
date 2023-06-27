@@ -4,15 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using Unity.Netcode;
 
-public class GameState : NetworkBehaviour
+public class PongGameState : NetworkBehaviour
 {
-
-  #region Singleton
-
-  public float cameraLerpSpeed;
-  float cameraSize;
-
-  public static GameState singleton;
+  public static PongGameState singleton;
+  public float cameraLerpSpeed;//set in unity editor dragndrop
 
   private void Start()
   {
@@ -24,7 +19,17 @@ public class GameState : NetworkBehaviour
     cameraSize = Camera.main.orthographicSize;
   }
 
-  #endregion
+
+
+
+
+  float cameraSize;
+  public float CameraSize
+  {
+    get { return cameraSize; }
+    set { cameraSize = value; }
+  }
+
 
 
 
@@ -37,12 +42,6 @@ public class GameState : NetworkBehaviour
 
 
 
-  //called by gamemode
-  [ClientRpc]
-  public void CameraSizeClientRpc(float size)
-  {
-    cameraSize += size;
-  }
 
   void Update()
   {

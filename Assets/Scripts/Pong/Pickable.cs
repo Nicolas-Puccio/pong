@@ -123,7 +123,7 @@ public class Pickable : NetworkBehaviour
     switch (type.Value.ToString())
     {
       case "Multiply":
-        GetComponent<SpriteRenderer>().color = new Color(0.5f, .5f, 0.5f, 1f);
+        GetComponent<SpriteRenderer>().color = new Color(.5f, .5f, .5f, 1f);
         break;
 
       case "ShockSelf":
@@ -258,7 +258,7 @@ public class Pickable : NetworkBehaviour
       if (shockProperties.shockSelf)
       {
         if (ballMovement.lastPlayerHit != null)
-          GameMode.singleton.Shock(ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().position.Value.ToString());
+          PongGameMode.singleton.Shock(ballMovement.lastPlayerHit.GetComponent<PlayerMovement>().position.Value.ToString());
       }
 
 
@@ -268,7 +268,7 @@ public class Pickable : NetworkBehaviour
         foreach (GameObject player in players)
         {
           if (player != ballMovement.lastPlayerHit)
-            GameMode.singleton.Shock(player.GetComponent<PlayerMovement>().position.Value.ToString());
+            PongGameMode.singleton.Shock(player.GetComponent<PlayerMovement>().position.Value.ToString());
         }
       }
     }
@@ -284,7 +284,7 @@ public class Pickable : NetworkBehaviour
 
     if (pickableProperties is MapSizeProperties mapSizeProperties)
     {
-      GameMode.singleton.ChangeCameraSize(mapSizeProperties.amount);
+      PongGameMode.singleton.CameraSizeClientRpc(mapSizeProperties.amount);
     }
   }
 }

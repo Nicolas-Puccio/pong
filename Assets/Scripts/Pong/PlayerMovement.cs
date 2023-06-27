@@ -5,21 +5,35 @@ using Unity.Collections;
 
 public class PlayerMovement : NetworkBehaviour
 {
-  public float speed = 10f; // set by editor
-  public float playerOffsetFromEdge; // set by editor
+  public float speed;//set in unity editor dragndrop
+  public float playerOffsetFromEdge;//set in unity editor dragndrop
+  BoxCollider2D boxCollider;
+
+  void Start()
+  {
+    boxCollider = GetComponent<BoxCollider2D>();
+
+    if (speed == 0f)
+      Debug.LogError("speed not set");
+
+    if (playerOffsetFromEdge == 0f)
+      Debug.LogError("playerOffsetFromEdge not set");
+
+  }
+
+
+
+
 
   public NetworkVariable<FixedString32Bytes> position = new(); // set by OnNetworkSpawn
 
-
-  #region pickable properties
+  #region pickable set properties
 
   public NetworkVariable<int> inputDirection;//1 = normal input, -1 = inverted input
-
-  public bool weak;//-false
+  public bool weak;//-false//currently unused as my code sucks
 
   #endregion
 
-  BoxCollider2D boxCollider;
 
 
   public override void OnNetworkSpawn()
@@ -31,45 +45,52 @@ public class PlayerMovement : NetworkBehaviour
       //distance from center
       float playerSpawnDistance = BackgroundSize.backgroundSize / 2 - playerOffsetFromEdge;
 
-      position.Value = GameMode.singleton.GetPos();
-      transform.SetLocalPositionAndRotation(
-        position.Value == "top" ? new Vector2(0, playerSpawnDistance) : position.Value == "right" ? new Vector2(playerSpawnDistance, 0) : position.Value == "bot" ? new Vector2(0, -playerSpawnDistance) : new Vector2(-playerSpawnDistance, 0),
-        position.Value == "top" || position.Value == "bot" ? Quaternion.Euler(0f, 0f, 90f) : Quaternion.identity);
+      position.Value = PongGameMode.singleton.GetPos();
 
-      boxCollider = GetComponent<BoxCollider2D>();
+      //set transform.position and rotation depending on player position(top, down, left, right)
+      Vector3 transformPosition = position.Value == "top" ? new Vector2(0, playerSpawnDistance) : position.Value == "right" ? new Vector2(playerSpawnDistance, 0) : position.Value == "bot" ? new Vector2(0, -playerSpawnDistance) : new Vector2(-playerSpawnDistance, 0);
+      Quaternion transformRotation = position.Value == "top" || position.Value == "bot" ? Quaternion.Euler(0f, 0f, 90f) : Quaternion.identity;
+
+      transform.SetLocalPositionAndRotation(transformPosition, transformRotation);
     }
 
-    if (!IsOwner)
+    if (IsOwner)
     {
-      enabled = false;
-      Debug.Log("player disabled self");
+      enabled = true;
+      Debug.Log("player enable self");
     }
 
-    GameState.singleton.PlayerJoined(position.Value.ToString(), IsOwner);
+    PongGameState.singleton.PlayerJoined(position.Value.ToString(), IsOwner);
   }
 
 
 
-
-  // Update is called once per frame
+  // player movement and position adjustment(based on map size)
   void Update()
   {
-    // Get the vertical input axis (up and down arrow keys)
+    // Get the vertical or horizontal input
     float input = Input.GetAxis(position.Value == "top" || position.Value == "bot" ? "Horizontal" : "Vertical") * speed * Time.deltaTime * inputDirection.Value;
 
-    // Calculate the new position based on the vertical input
+    // Calculate new position based on input
     Vector3 newPosition = transform.position + new Vector3(position.Value == "top" || position.Value == "bot" ? input : 0f, position.Value == "left" || position.Value == "right" ? input : 0f, 0f);
 
+    //get offset based on map size
     float playerSpawnDistance = BackgroundSize.backgroundSize / 2 - playerOffsetFromEdge;
 
-    newPosition = new Vector2(position.Value == "top" || position.Value == "bot" ? newPosition.x : position.Value == "right" ? playerSpawnDistance : -playerSpawnDistance,
-    position.Value == "left" || position.Value == "right" ? newPosition.y : position.Value == "top" ? playerSpawnDistance : -playerSpawnDistance);
+    //adjust position based on offset
+    float x = position.Value == "top" || position.Value == "bot" ? newPosition.x : position.Value == "right" ? playerSpawnDistance : -playerSpawnDistance;
+    float y = position.Value == "left" || position.Value == "right" ? newPosition.y : position.Value == "top" ? playerSpawnDistance : -playerSpawnDistance;
 
-
-    transform.position = newPosition;
+    transform.position = new Vector2(x, y);
   }
 
 
+
+
+
+  #region UNUSED CODE
+
+  //-broken, should fix
   public void TryToTilt(Collision2D col, Vector3 ballPosition)
   {
     return;//-not working properly
@@ -92,7 +113,7 @@ public class PlayerMovement : NetworkBehaviour
       Debug.Log("DONE");
     }
 
-    Debug.Log("tilt mf"); //use GetContacts instead?
+    //use GetContacts instead?
   }
 
 
@@ -133,4 +154,6 @@ public class PlayerMovement : NetworkBehaviour
         return position.Value == "top" ? 1 : 0;
     }
   }
+
+  #endregion
 }

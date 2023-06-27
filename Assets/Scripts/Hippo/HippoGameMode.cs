@@ -5,54 +5,57 @@ using System.Collections.Generic;
 
 public class HippoGameMode : NetworkBehaviour
 {
-
   public static HippoGameMode singleton;
-
-  public GameObject startButton;
-
   public GameObject toothPrefab;
   public GameObject hintPrefab;
-
-  public List<HippoPlayerController> players;//uses the order of the list to manage turns, currently order of join, could be shuffled
-
-  public bool AllowInput = true;//to compensate with delay or lag if the user touches a tooth juuuust beore it was just turn in order to hint it, and ends up toching it
-
+  public GameObject startButton;//set in unity editor dragndrop
 
   void Start()
   {
-    toothPrefab = Resources.Load<GameObject>("Hippo/Tooth");
     hintPrefab = Resources.Load<GameObject>("Hippo/Hint");
+    toothPrefab = Resources.Load<GameObject>("Hippo/Tooth");
+
+
+    if (!startButton)
+      Debug.LogError("startButton not set");
 
     singleton = this;
   }
 
 
-  public override void OnNetworkSpawn()
-  {
 
+
+
+  List<HippoPlayerController> players;//uses the order of the list to manage turns, currently order of join, could be shuffled
+  bool AllowInput = true;//to compensate with delay or lag if the user touches a tooth juuuust beore it was just turn in order to hint it, and ends up toching it
+
+
+
+  public override void OnNetworkSpawn()//called when host or client is created
+  {
     if (IsHost)
     {
-      startButton.SetActive(true);
+      startButton.SetActive(true);//enables start button for host
     }
     else
     {
-      Debug.Log("gamemode disable self on client");
+      Debug.Log("gamemode disable self on client");//clients don't need this script
       enabled = false;
     }
   }
 
 
-  //called by startButton
-  public void StartGame()
+
+  public void StartGame()//called by startButton
   {
     SpawnTeeth();
     //-could shuffle here to make the order random
-    players[0].SetIsMyTurn(true);
+    players[0].IsMyTurn = true;
   }
 
 
 
-  void SpawnTeeth()
+  void SpawnTeeth()//spawns teeth and sets one's name to "BadTooth"
   {
     int badTooth = Random.Range(0, 16);
 
@@ -95,6 +98,7 @@ public class HippoGameMode : NetworkBehaviour
 
 
 
+  //called by HippoPlayerController onNetworkSpawn
   public void PlayerJoined(HippoPlayerController player)
   {
     players.Add(player);
@@ -102,6 +106,7 @@ public class HippoGameMode : NetworkBehaviour
 
 
 
+  //called by HippoPlayerController
   public void Touch(HippoPlayerController touchPlayer, Transform tooth)//should receive gameobject instead of ray?
   {
     //ignore input if cooldown
@@ -110,7 +115,7 @@ public class HippoGameMode : NetworkBehaviour
 
 
 
-    if (touchPlayer.isMyTurn.Value)
+    if (touchPlayer.IsMyTurn)
     {
       AllowInput = false;
 
@@ -124,26 +129,34 @@ public class HippoGameMode : NetworkBehaviour
         //-animation?
 
 
+        //no longer this player's turn
+        touchPlayer.IsMyTurn = false;
+
 
         //sets next player's turn
-        touchPlayer.SetIsMyTurn(false);
         int currentIndex = players.FindIndex(player => player == touchPlayer);
         int nextIndex = (currentIndex + 1) % players.Count;
-        players[nextIndex].SetIsMyTurn(true);
+        players[nextIndex].IsMyTurn = true;
 
 
-
+        //enable input coroutine
         StartCoroutine(EnableInput());
       }
     }
     else
     {
+      //if it is not the player's turn, it spawns a hitn at the tooth cliked
       SpawnHintClientRpc(tooth.position);
     }
   }
 
 
 
+
+
+  //server calls this and is executed on all clients spawning the hint
+  //the hint is not a network object, i guess it was not really necesary to make it one
+  //method gets called regardless of if the script is enabled or not
   [ClientRpc]
   void SpawnHintClientRpc(Vector3 position)
   {
@@ -153,6 +166,8 @@ public class HippoGameMode : NetworkBehaviour
 
     Instantiate(hintPrefab, position, rotation);
   }
+
+
 
 
 

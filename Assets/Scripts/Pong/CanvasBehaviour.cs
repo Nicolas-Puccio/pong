@@ -17,9 +17,6 @@ public class CanvasBehaviour : NetworkBehaviour
   public NetworkVariable<int> scorebot;
 
 
-  //only on server
-  public GameObject startButton;
-
   void Start()
   {
     singleton = this;
@@ -37,19 +34,6 @@ public class CanvasBehaviour : NetworkBehaviour
     }
   }
 
-
-  //only on server
-  public void StartButton()
-  {
-    GameMode.singleton.StartGame();
-    Destroy(startButton);
-  }
-
-  //only on server
-  public void EnableButton()
-  {
-    startButton.SetActive(true);
-  }
 
   public void FixedUpdate()
   {
@@ -96,12 +80,12 @@ public class CanvasBehaviour : NetworkBehaviour
 
     if (Input.GetKeyDown(KeyCode.Z))
     {
-      GameMode.singleton.ChangeCameraSize(1);
+      PongGameMode.singleton.CameraSizeClientRpc(1);
     }
 
     if (Input.GetKeyDown(KeyCode.X))
     {
-      GameMode.singleton.ChangeCameraSize(-1);
+      PongGameMode.singleton.CameraSizeClientRpc(-1);
     }
   }
 }

@@ -1,51 +1,65 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Unity.Netcode;
 
-public class GameMode : NetworkBehaviour
+public class PongGameMode : NetworkBehaviour
 {
-
-  #region Singleton and Resources.Load
-
-  public static GameMode singleton;
-
+  public static PongGameMode singleton;
+  static GameObject wallPrefab;
+  static GameObject ballPrefab;
+  static GameObject pickablePrefab;
+  public GameObject startButton;//set in unity editor dragndrop
 
   void Start()
   {
-    //load Wall Resource
-    if (!wallPrefab)
-      wallPrefab = Resources.Load<GameObject>("Pong/Wall");
+    wallPrefab = Resources.Load<GameObject>("Pong/Wall");
+    ballPrefab = Resources.Load<GameObject>("Pong/Ball");
+    pickablePrefab = Resources.Load<GameObject>("Pong/Pickable");
 
-    //load Ball Resource
-    if (!ballPrefab)
-      ballPrefab = Resources.Load<GameObject>("Pong/Ball");
-
-    //load Pickable Resource
-    if (!pickablePrefab)
-      pickablePrefab = Resources.Load<GameObject>("Pong/Pickable");
-
+    if (!startButton)
+      Debug.LogError("startButton not set");
 
     singleton = this;
   }
 
-  #endregion
 
 
-  readonly string[] positions = new string[] { "top", "bot", "right", "left" };
+
+
+  string[] positions = new string[] { "top", "bot", "right", "left" }; //order in which to spawn
   int nextPos = 0; //index de la posicion del proximo jugador
 
-
-  static GameObject wallPrefab;
-  static GameObject ballPrefab;
-  static GameObject pickablePrefab;
+  Transform wallLeft, wallRight;
 
 
-  Transform wallLeft;
-  Transform wallRight;
+
+  public override void OnNetworkSpawn()
+  {
+    if (!IsHost)
+    {
+      Debug.Log("gamemode disable self on client");
+      enabled = false;
+    }
+  }
 
 
+
+  //called by PlayerMovement to get the position it should go in  
+  public string GetPos()
+  {
+
+    //min players required to start -1
+    if (nextPos == 0)//-change to 1
+    {
+      startButton.SetActive(true);
+    }
+
+    return positions[nextPos++];
+  }
+
+
+
+  //map size is dynamic so wall position and scale must be dynamic too
   void Update()
   {
     if (wallLeft)
@@ -62,63 +76,43 @@ public class GameMode : NetworkBehaviour
   }
 
 
-  public override void OnNetworkSpawn()
-  {
-    if (!IsHost)
-    {
-      Debug.Log("gamemode disable self on client");
-      enabled = false;
-    }
-  }
 
 
-  //used by playermovement    
-  public string GetPos()
-  {
-
-    //when there are at least 2 players
-    if (nextPos == 0)//-change to 1
-    {
-      CanvasBehaviour.singleton.EnableButton();
-    }
-
-    return positions[nextPos++];
-  }
-
-
-  //called by ui
+  //called by startButton ui
   public void StartGame()
   {
+    Destroy(startButton);
 
+    //spawns initial ball
     GameObject ball = Instantiate(ballPrefab);
     ball.GetComponent<BallMovement>().enabled = true;
     ball.GetComponent<NetworkObject>().Spawn();
 
+
     SpawnWalls();
-    GameState.singleton.GameStartClientRpc();
-    StartCoroutine(SpawnPickable());
+    PongGameState.singleton.GameStartClientRpc();//notify clients that the game started
+    StartCoroutine(SpawnPickable());//start pickable spawn coroutine
   }
 
 
 
   void SpawnWalls()
   {
-    if (nextPos < 4)
+    if (nextPos < 4)//spawn left wall if under 4 players
     {
       GameObject wall = Instantiate(wallPrefab, new Vector2(-BackgroundSize.backgroundSize / 2, 0), Quaternion.identity);
       wall.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
-
       wall.GetComponent<NetworkObject>().Spawn();
       wall.name = "wallleft";
-      wallLeft = wall.transform;
+      wallLeft = wall.transform;//stores reference to dynamically adjust in Update
     }
-    if (nextPos < 3)
+    if (nextPos < 3)//spawn right wall if under 3 players
     {
       GameObject wall = Instantiate(wallPrefab, new Vector2(BackgroundSize.backgroundSize / 2, 0), Quaternion.identity);
       wall.transform.localScale = new Vector2(1, BackgroundSize.backgroundSize);
       wall.GetComponent<NetworkObject>().Spawn();
       wall.name = "wallright";
-      wallRight = wall.transform;
+      wallRight = wall.transform;//stores reference to dynamically adjust in Update
     }
   }
 
@@ -134,22 +128,25 @@ public class GameMode : NetworkBehaviour
     }
     else if (pos == "all")
     {
-
+      //-call itself multiple times?
     }
     else
     {
       CanvasBehaviour.singleton.IncreaseScore(pos);
+      //-
     }
 
     StartCoroutine(TryRespawnBall());
   }
 
-  public IEnumerator TryRespawnBall()
+
+
+  IEnumerator TryRespawnBall()
   {
-    yield return new WaitForSeconds(.1f);
+    yield return new WaitForSeconds(.1f);//wait for the last ball to get destroyed (can't DestroyImmediate because of network)
 
     GameObject[] balls = GameObject.FindGameObjectsWithTag("Ball");
-    if (balls.Length == 0)
+    if (balls.Length == 0)//there are no balls spawned
     {
       GameObject ball = Instantiate(ballPrefab);
       ball.GetComponent<BallMovement>().enabled = true;
@@ -157,10 +154,13 @@ public class GameMode : NetworkBehaviour
     }
   }
 
+
+
   IEnumerator SpawnPickable()
   {
-    while (true)
+    while (true)//-should this stop?
     {
+      //random Vector2 position of pickabled
       Vector2 position = new(Random.Range(-BackgroundSize.backgroundSize / 3, BackgroundSize.backgroundSize / 3),
           Random.Range(-BackgroundSize.backgroundSize / 3, BackgroundSize.backgroundSize / 3));
 
@@ -169,13 +169,18 @@ public class GameMode : NetworkBehaviour
       pickable.GetComponent<Pickable>().enabled = true;
       pickable.GetComponent<NetworkObject>().Spawn();
 
-      yield return new WaitForSeconds(5);
+      yield return new WaitForSeconds(10);
     }
   }
 
 
-  public void ChangeCameraSize(float size)
+
+
+
+  //called by pickable and canvasbehaviour debug
+  [ClientRpc]
+  public void CameraSizeClientRpc(float size)
   {
-    GameState.singleton.CameraSizeClientRpc(size);
+    PongGameState.singleton.CameraSize += size;
   }
 }
