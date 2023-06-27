@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Netcode;
+using System.Collections;
 using System.Collections.Generic;
 
 public class HippoGameMode : NetworkBehaviour
@@ -24,7 +25,7 @@ public class HippoGameMode : NetworkBehaviour
 
     singleton = this;
   }
-  
+
 
   public override void OnNetworkSpawn()
   {
@@ -108,8 +109,11 @@ public class HippoGameMode : NetworkBehaviour
       return;
 
 
+
     if (touchPlayer.isMyTurn.Value)
     {
+      AllowInput = false;
+
       if (tooth.name == "BadTooth")
       {
         Shock(touchPlayer);
@@ -126,6 +130,10 @@ public class HippoGameMode : NetworkBehaviour
         int currentIndex = players.FindIndex(player => player == touchPlayer);
         int nextIndex = (currentIndex + 1) % players.Count;
         players[nextIndex].SetIsMyTurn(true);
+
+
+
+        StartCoroutine(EnableInput());
       }
     }
     else
@@ -139,6 +147,18 @@ public class HippoGameMode : NetworkBehaviour
   [ClientRpc]
   void SpawnHintClientRpc(Vector3 position)
   {
-    Instantiate(hintPrefab, position, Quaternion.identity);
+    Quaternion rotation = position.y > 0 ? Quaternion.identity : Quaternion.Euler(0f, 0f, 180f);
+    position += new Vector3(0, position.y > 0 ? -1 : 1, 0);
+
+
+    Instantiate(hintPrefab, position, rotation);
+  }
+
+
+
+  IEnumerator EnableInput()
+  {
+    yield return new WaitForSeconds(1);
+    AllowInput = true;
   }
 }
