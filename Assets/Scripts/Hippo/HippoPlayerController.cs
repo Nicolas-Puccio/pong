@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
 using Unity.Netcode;
 
 public class HippoPlayerController : NetworkBehaviour
 {
+  public GameObject yourTurnText;
   NetworkVariable<bool> isMyTurn = new();
   public bool IsMyTurn
   {
@@ -12,7 +14,10 @@ public class HippoPlayerController : NetworkBehaviour
 
 
 
-  void Start() { }//just need it in order to disable script on eidtor
+  void Start()
+  {
+
+  }//need a Start() in order to disable script on editor
 
 
 
@@ -27,6 +32,17 @@ public class HippoPlayerController : NetworkBehaviour
     {
       enabled = true;//if this is my player controller, we enable it
       Debug.Log("player enabled self");
+
+
+      yourTurnText = GameObject.Find("YourTurnText");
+      if (!yourTurnText)
+        Debug.LogError("yourTurnText not set");
+
+
+      isMyTurn.OnValueChanged += (bool oldValue, bool newValue) =>
+      {
+        yourTurnText.GetComponent<Text>().enabled = newValue;
+      };
     }
   }
 
@@ -44,7 +60,7 @@ public class HippoPlayerController : NetworkBehaviour
       {
         Debug.Log("CLICKED " + hit.collider.name);
 
-        if (hit.transform.CompareTag("Tooth"))//don't care if it isn't a teeth
+        if (!hit.transform.CompareTag("Tooth"))//don't care if it isn't a teeth
           return;
 
         if (IsHost)
