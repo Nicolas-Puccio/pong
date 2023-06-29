@@ -3,7 +3,7 @@ using Unity.Netcode;
 
 public class HippoPlayerController : NetworkBehaviour
 {
-  NetworkVariable<bool> isMyTurn;
+  NetworkVariable<bool> isMyTurn = new();
   public bool IsMyTurn
   {
     get { return isMyTurn.Value; }
@@ -12,7 +12,7 @@ public class HippoPlayerController : NetworkBehaviour
 
 
 
-  void Start() { }//in order to disable script
+  void Start() { }//just need it in order to disable script on eidtor
 
 
 
@@ -20,12 +20,12 @@ public class HippoPlayerController : NetworkBehaviour
   {
     if (IsHost)
     {
-      HippoGameMode.singleton.PlayerJoined(this);
+      HippoGameMode.singleton.PlayerJoined(this);//notify gamemode we joined...//-isn't there an event the gamemode can hook to?
     }
 
     if (IsOwner)
     {
-      enabled = true;
+      enabled = true;//if this is my player controller, we enable it
       Debug.Log("player enabled self");
     }
   }
@@ -34,9 +34,9 @@ public class HippoPlayerController : NetworkBehaviour
 
   void Update()
   {
-    if (Input.GetMouseButtonDown(0))
+    if (Input.GetMouseButtonDown(0))//-make it work with touch
     {
-      //-make ray only detect teeth? layer? tag?
+      //-make ray only detect teeth? layer? tag? currently gets anyting
       Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
       RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
 
@@ -44,13 +44,18 @@ public class HippoPlayerController : NetworkBehaviour
       {
         Debug.Log("CLICKED " + hit.collider.name);
 
+        if (hit.transform.CompareTag("Tooth"))//don't care if it isn't a teeth
+          return;
+
         if (IsHost)
-          HippoGameMode.singleton.Touch(this, hit.transform);//hostcalls touch
+          HippoGameMode.singleton.Touch(this, hit.transform);//host calls touch
         else
           TouchServerRpc(hit.transform.GetComponent<NetworkObject>().NetworkObjectId);//clients call touch through a RPC
       }
     }
   }
+
+
 
 
 

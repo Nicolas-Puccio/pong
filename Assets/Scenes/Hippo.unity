@@ -490,10 +490,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startButton: {fileID: 96343808}
-  toothPrefab: {fileID: 0}
-  hintPrefab: {fileID: 0}
-  players: []
-  AllowInput: 1
 --- !u!4 &997487061
 Transform:
   m_ObjectHideFlags: 0
